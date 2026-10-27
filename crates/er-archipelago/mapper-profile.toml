@@ -17,3 +17,11 @@ captures = ["", "get_shop_menu_list"]
 [[patterns]]
 pattern = "44 89 6c 24 28 44 88 64 24 20 4d 8b ce 4c 8b c7 48 8b d3 e8 $ { ' }"
 captures = ["", "load_tpf_res_cap"]
+
+[[patterns]]
+pattern = "84 C0 74 ? C7 45 ? 58 02 00 00"
+captures = ["check_combat_open_map"]
+
+[[patterns]]
+pattern = "84 C0 75 ? 38 83 ? ? ? ? 75 ? 83 E6 FE"
+captures = ["check_combat_close_map"]

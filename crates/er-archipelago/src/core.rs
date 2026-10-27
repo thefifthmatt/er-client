@@ -8,10 +8,11 @@ use archipelago_rs::RichText;
 use eldenring::cs::*;
 use eldenring::param::EquipParamStructMut;
 use fromsoftware_shared::FromStatic;
+use json::json;
 use log::*;
 use regex_macro::regex;
 
-use crate::{checks, game::status};
+use crate::{checks, coords::{self, GlobalPosition}, game::status};
 use crate::checks::{LocationFlagChanges, LocationFlagMapping};
 use crate::dungeon_sweep::DungeonSweep;
 use crate::item::{ItemIdExt, RegulationManager};
@@ -40,6 +41,9 @@ const INVENTORY_SCAN_INTERVAL: Duration = Duration::from_millis(100);
 /// right away whenever the checked set changes, so this is just a backstop for
 /// state that changed elsewhere (like a late server connection).
 const VIRTUAL_LOCATION_SYNC_INTERVAL: Duration = Duration::from_millis(250);
+
+/// How often player region and coordinates are updated in the server.
+const MAP_POSITION_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
 
 /// How long to wait for the server's answer to the location scout before asking
 /// again. Without this, an answer that never arrives would block every
@@ -134,6 +138,11 @@ pub struct Core {
     /// Timers for the periodic sync passes, so they don't run every frame.
     last_inventory_scan: Option<Instant>,
     last_virtual_location_sync: Option<Instant>,
+    last_map_position_update: Option<Instant>,
+
+    /// The previous player position, to avoid sending updates when it doesn't change,
+    /// and also menu return count to refresh when the game loads in.
+    last_map_position: Option<(GlobalPosition, u32)>,
 
     /// How many locations were checked at the end of the last tick. Used to
     /// notice when a new one comes in.
@@ -220,6 +229,8 @@ impl shared::Core for Core {
             hinted_locations: HashSet::new(),
             last_inventory_scan: None,
             last_virtual_location_sync: None,
+            last_map_position_update: None,
+            last_map_position: None,
             locations_seen: 0,
             was_dead: false,
             last_death_count: None,
@@ -248,6 +259,7 @@ impl shared::Core for Core {
     /// we're not connected to the server or the mod hit a fatal error.
     fn update_live(&mut self) -> Result<()> {
         self.set_player_presence(LOADED_SPEFFECT);
+        self.update_coords()?;
         crate::icons::load_tpf();
         if !self.base().past_grace_period(LOAD_GRACE_PERIOD) {
             return Ok(());
@@ -708,6 +720,8 @@ impl Core {
         let is_dead = unsafe { crate::game::EldenRing::is_player_dead() };
         let death_count = unsafe { crate::game::EldenRing::death_count() };
         let flag_came_on = is_dead && !self.was_dead;
+        // TODO: This condition can probably be removed as the HP trigger will apply
+        // before YOU DIED actually appears.
         let count_went_up = matches!(
             (death_count, self.last_death_count),
             (Some(now), Some(before)) if now > before
@@ -1362,6 +1376,20 @@ impl Core {
             self.sent_goal = true;
         }
 
+        Ok(())
+    }
+
+    fn update_coords(&mut self) -> Result<()> {
+        if due(&mut self.last_map_position_update, MAP_POSITION_UPDATE_INTERVAL)
+            && let Some(pos) = unsafe { coords::get_position() }
+            && Some((pos, self.last_menu_returns)) != self.last_map_position
+            && let Some(client) = self.client_mut() {
+            let key = format!("{}_{}_eldenring_position", client.this_player().slot(), client.this_player().team());
+            let value = json!([pos.region, pos.layer, pos.x, pos.z]);
+            // Local disconnections should be detected prior to this point, but timeouts might cause issues?
+            client.set(key, value, false).context("Failed to update map coordinates")?;
+            self.last_map_position = Some((pos, self.last_menu_returns));
+        }
         Ok(())
     }
 

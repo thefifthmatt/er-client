@@ -10,6 +10,8 @@ use super::RvaBundle;
 /// using `tools/binary-generator`.
 pub const RVAS: RvaBundle = RvaBundle {
 buy_menu_gaitem: 0x79ac40,
+check_combat_close_map: 0x9c4ea0,
+check_combat_open_map: 0x7eff88,
 get_shop_menu_list: 0x84ec70,
 load_tpf_res_cap: 0xb85260,
 set_event_flag: 0x5faef0,

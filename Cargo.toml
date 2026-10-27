@@ -48,6 +48,13 @@ sekiro = { git = "https://github.com/vswarte/fromsoftware-rs" }
 
 # archipelago_rs = { path = "../archipelago_rs" }
 
+[patch."https://github.com/ducksterisduckster-design/fromsoft-rs"]
+fromsoftware-shared = { path = "../fromsoft-rs/crates/shared" }
+eldenring = { path = "../fromsoft-rs/crates/eldenring" }
+
+[patch."https://github.com/ducksterisduckster-design/fromsoft-extra"]
+eldenring-extra = { path = "../fromsoft-extra-main/crates/eldenring" }
+
 # [patch."https://github.com/vswarte/fromsoftware-rs"]
 # fromsoftware-shared = { path = "../fromsoftware-rs/crates/shared" }
 # darksouls3 = { path = "../fromsoftware-rs/crates/darksouls3" }

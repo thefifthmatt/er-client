@@ -2,6 +2,7 @@ use eldenring_extra::input::InputBlocker;
 use windows::Win32::{Foundation::HINSTANCE, System::SystemServices::DLL_PROCESS_ATTACH};
 
 mod checks;
+mod coords;
 mod core;
 mod dungeon_sweep;
 mod game;
@@ -33,6 +34,7 @@ extern "C" fn DllMain(_: HINSTANCE, call_reason: u32) -> bool {
         SaveData::hook();
         item::hook_items();
         checks::hook_flag_changes();
+        game::misc::hook_misc();
     }
 
     let blocker =

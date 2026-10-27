@@ -143,3 +143,22 @@ impl LazyFileReader {
         Ok(bytes)
     }
 }
+
+/// Silly utility that logs lines only when the line changes, for debugging simple state changes.
+pub struct DiffLogger {
+    last_line: LazyLock<Mutex<String>>,
+}
+
+impl DiffLogger {
+    pub const fn new() -> Self {
+        Self { last_line: LazyLock::new(|| Mutex::new("".to_owned())) }
+    }
+
+    pub fn log(&self, line: &str) {
+        let mut last_line = self.last_line.lock().unwrap();
+        if *last_line != line {
+            log::info!("{}", line);
+            *last_line = line.to_owned();
+        }
+    }
+}

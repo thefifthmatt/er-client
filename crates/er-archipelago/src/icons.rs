@@ -1,9 +1,9 @@
-use std::{ffi::c_void, fs, io::Read, sync::{Arc, Mutex, OnceLock}};
+use std::{ffi::c_void, io::Read, sync::{Mutex, OnceLock}};
 
 use anyhow::Result;
 use fromsoftware_shared::{FromStatic, Program, singleton};
 use pelite::pe::Pe;
-use shared::utils::{self, LazyFileReader};
+use shared::utils::LazyFileReader;
 use windows::core::PCWSTR;
 use zip::ZipArchive;
 

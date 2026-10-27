@@ -17,6 +17,7 @@ use shared::utils::LazyFileReader;
 use crate::game::status::StatusEffect;
 
 pub mod status;
+pub mod misc;
 
 pub struct EldenRing;
 
